@@ -18,6 +18,7 @@ func _centerline(t: float) -> Vector3:
 
 func _build_road_mesh() -> void:
 	var vertices := PackedVector3Array()
+	var normals := PackedVector3Array()
 	var indices := PackedInt32Array()
 	var half_width := ROAD_WIDTH * 0.5
 	for i in range(SEGMENTS + 1):
@@ -27,6 +28,8 @@ func _build_road_mesh() -> void:
 		var side := Vector3(-tangent.z, 0.0, tangent.x)
 		vertices.append(point + side * half_width + Vector3.UP * 0.12)
 		vertices.append(point - side * half_width + Vector3.UP * 0.12)
+		normals.append(Vector3.UP)
+		normals.append(Vector3.UP)
 	for i in range(SEGMENTS):
 		var a := i * 2
 		var b := a + 1
@@ -36,6 +39,7 @@ func _build_road_mesh() -> void:
 	var arrays := []
 	arrays.resize(Mesh.ARRAY_MAX)
 	arrays[Mesh.ARRAY_VERTEX] = vertices
+	arrays[Mesh.ARRAY_NORMAL] = normals
 	arrays[Mesh.ARRAY_INDEX] = indices
 	var mesh := ArrayMesh.new()
 	mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, arrays)
@@ -70,6 +74,11 @@ func _build_track_collisions() -> void:
 
 func _build_barriers() -> void:
 	var half_width := ROAD_WIDTH * 0.5 + 1.0
+	var barrier_materials: Array[Material] = []
+	for color in [Color(0.82, 0.84, 0.86), Color(0.85, 0.08, 0.07)]:
+		var material := StandardMaterial3D.new()
+		material.albedo_color = color
+		barrier_materials.append(material)
 	for side_sign in [-1.0, 1.0]:
 		for i in range(SEGMENTS):
 			var t0 := TAU * float(i) / float(SEGMENTS)
@@ -92,9 +101,7 @@ func _build_barriers() -> void:
 			var mesh := BoxMesh.new()
 			mesh.size = shape.size
 			visual.mesh = mesh
-			var material := StandardMaterial3D.new()
-			material.albedo_color = Color(0.82, 0.84, 0.86) if i % 2 == 0 else Color(0.85, 0.08, 0.07)
-			visual.material_override = material
+			visual.material_override = barrier_materials[i % 2]
 			barrier.add_child(visual)
 
 func _build_start_finish() -> void:
