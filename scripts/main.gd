@@ -4,10 +4,12 @@ const TrackBuilder = preload("res://scripts/track_builder.gd")
 const CarController = preload("res://scripts/car_controller.gd")
 const FollowCamera = preload("res://scripts/follow_camera.gd")
 const RacingHUD = preload("res://scripts/racing_hud.gd")
+const CarCatalog = preload("res://scripts/car_catalog.gd")
 
 var player: CharacterBody3D
 var hud: CanvasLayer
 var race_time := 0.0
+var selected_car_index := 0
 
 func _ready() -> void:
 	_setup_input_map()
@@ -19,6 +21,7 @@ func _ready() -> void:
 	player.position = Vector3(65.0, 0.0, -6.0)
 	player.rotation.y = PI
 	add_child(player)
+	player.apply_car_profile(CarCatalog.CARS[selected_car_index])
 	var camera := Camera3D.new()
 	camera.name = "ChaseCamera"
 	camera.current = true
@@ -30,6 +33,8 @@ func _ready() -> void:
 	add_child(hud)
 	hud.set("player", player)
 	hud.set("on_restart", Callable(self, "_restart_race"))
+	hud.set("on_next_car", Callable(self, "_next_car"))
+	hud.set("selected_car_name", str(CarCatalog.CARS[selected_car_index].get("name", "APEX GP-01")))
 
 func _physics_process(delta: float) -> void:
 	race_time += delta
@@ -90,6 +95,15 @@ func _add_key_action(action: StringName, key: Key) -> void:
 	var event := InputEventKey.new()
 	event.physical_keycode = key
 	InputMap.action_add_event(action, event)
+
+func _next_car() -> void:
+	selected_car_index = (selected_car_index + 1) % CarCatalog.CARS.size()
+	var profile: Dictionary = CarCatalog.CARS[selected_car_index]
+	if is_instance_valid(player):
+		player.apply_car_profile(profile)
+		player.reset_car()
+	if is_instance_valid(hud):
+		hud.set("selected_car_name", str(profile.get("name", "APEX CAR")))
 
 func _restart_race() -> void:
 	if is_instance_valid(player):
