@@ -8,10 +8,10 @@ const REVERSE_SPEED := 12.0
 const LATERAL_GRIP := 7.5
 const GRAVITY := 22.0
 
-var speed_kmh := 0.0
-var steering_input := 0.0
-var throttle_input := 0.0
-var brake_input := 0.0
+var speed_kmh: float = 0.0
+var steering_input: float = 0.0
+var throttle_input: float = 0.0
+var brake_input: float = 0.0
 var spawn_transform: Transform3D
 
 func _ready() -> void:
@@ -29,30 +29,30 @@ func _physics_process(delta: float) -> void:
 	steering_input = Input.get_action_strength("steer_right") - Input.get_action_strength("steer_left")
 	var forward := -global_transform.basis.z
 	var right := global_transform.basis.x
-	var forward_speed := velocity.dot(forward)
+	var forward_speed: float = velocity.dot(forward)
 	if throttle_input > 0.0:
 		velocity += forward * ENGINE_ACCELERATION * throttle_input * delta
 	if brake_input > 0.0:
 		if forward_speed > 1.0:
-			velocity -= forward * min(BRAKE_ACCELERATION * brake_input * delta, forward_speed)
+			velocity -= forward * minf(BRAKE_ACCELERATION * brake_input * delta, forward_speed)
 		else:
 			velocity -= forward * ENGINE_ACCELERATION * 0.55 * brake_input * delta
 	if Input.is_action_pressed("handbrake"):
-		velocity -= right * velocity.dot(right) * min(12.0 * delta, 1.0)
-	var steering_speed_factor := clamp(abs(forward_speed) / 12.0, 0.18, 1.0)
-	var speed_limiter := 1.0 - clamp(abs(forward_speed) / MAX_SPEED, 0.0, 0.72)
-	if abs(forward_speed) > 0.8:
-		rotate_y(-steering_input * 1.75 * steering_speed_factor * speed_limiter * sign(forward_speed) * delta)
+		velocity -= right * velocity.dot(right) * minf(12.0 * delta, 1.0)
+	var steering_speed_factor: float = clampf(absf(forward_speed) / 12.0, 0.18, 1.0)
+	var speed_limiter: float = 1.0 - clampf(absf(forward_speed) / MAX_SPEED, 0.0, 0.72)
+	if absf(forward_speed) > 0.8:
+		rotate_y(-steering_input * 1.75 * steering_speed_factor * speed_limiter * signf(forward_speed) * delta)
 	forward = -global_transform.basis.z
 	right = global_transform.basis.x
-	var lateral_speed := velocity.dot(right)
-	velocity -= right * lateral_speed * min(LATERAL_GRIP * delta, 0.92)
-	var longitudinal_speed := velocity.dot(forward)
+	var lateral_speed: float = velocity.dot(right)
+	velocity -= right * lateral_speed * minf(LATERAL_GRIP * delta, 0.92)
+	var longitudinal_speed: float = velocity.dot(forward)
 	if longitudinal_speed > MAX_SPEED:
 		velocity -= forward * (longitudinal_speed - MAX_SPEED)
 	if longitudinal_speed < -REVERSE_SPEED:
 		velocity -= forward * (longitudinal_speed + REVERSE_SPEED)
-	velocity -= velocity * min(0.32 * delta, 0.08)
+	velocity -= velocity * minf(0.32 * delta, 0.08)
 	if not is_on_floor():
 		velocity.y -= GRAVITY * delta
 	else:
