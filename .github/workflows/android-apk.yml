@@ -116,7 +116,7 @@ jobs:
       - name: Export Android APK
         run: |
           mkdir -p build
-          godot --headless --path . --export-debug "Android" build/APEX-Racing-debug.apk
+          godot --headless --verbose --path . --export-debug "Android" build/APEX-Racing-debug.apk
 
       - name: Verify APK exists
         run: |
