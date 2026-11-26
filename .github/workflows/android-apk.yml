@@ -121,7 +121,7 @@ jobs:
       - name: Verify APK exists
         run: |
           test -s build/APEX-Racing-debug.apk
-          file build/APEX-Racing-debug.apk
+          unzip -t build/APEX-Racing-debug.apk
 
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
