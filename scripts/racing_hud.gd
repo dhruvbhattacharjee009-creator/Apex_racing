@@ -4,8 +4,11 @@ class_name ApexRacingHUD
 var player: Node3D
 var race_time := 0.0
 var on_restart: Callable
+var on_next_car: Callable
+var selected_car_name := "APEX GP-01"
 var speed_label: Label
 var time_label: Label
+var car_label: Label
 
 func _ready() -> void:
 	_build_hud()
@@ -15,6 +18,8 @@ func _process(_delta: float) -> void:
 		speed_label.text = "%03d km/h" % int(abs(player.get("speed_kmh")))
 	if time_label:
 		time_label.text = _format_time(race_time)
+	if car_label:
+		car_label.text = selected_car_name
 
 func _build_hud() -> void:
 	var root := Control.new()
@@ -35,6 +40,13 @@ func _build_hud() -> void:
 	time_label.add_theme_font_size_override("font_size", 22)
 	time_label.add_theme_color_override("font_color", Color(0.85, 0.91, 1.0))
 	root.add_child(time_label)
+
+	car_label = Label.new()
+	car_label.text = selected_car_name
+	car_label.position = Vector2(30, 101)
+	car_label.add_theme_font_size_override("font_size", 16)
+	car_label.add_theme_color_override("font_color", Color(1.0, 0.82, 0.28))
+	root.add_child(car_label)
 
 	var title := Label.new()
 	title.text = "APEX  /  TEST CIRCUIT"
@@ -66,6 +78,18 @@ func _build_hud() -> void:
 	restart.pressed.connect(_restart_pressed)
 	root.add_child(restart)
 
+	var next_car := Button.new()
+	next_car.text = "NEXT CAR  >"
+	next_car.anchor_left = 1.0
+	next_car.anchor_right = 1.0
+	next_car.offset_left = -150
+	next_car.offset_right = -24
+	next_car.offset_top = 130
+	next_car.offset_bottom = 176
+	next_car.add_theme_font_size_override("font_size", 15)
+	next_car.pressed.connect(_next_car_pressed)
+	root.add_child(next_car)
+
 func _add_hold_button(root: Control, caption: String, action: StringName, offset: Vector2, size: Vector2, right_side: bool) -> void:
 	var button := Button.new()
 	button.text = caption
@@ -86,6 +110,10 @@ func _add_hold_button(root: Control, caption: String, action: StringName, offset
 func _restart_pressed() -> void:
 	if on_restart.is_valid():
 		on_restart.call()
+
+func _next_car_pressed() -> void:
+	if on_next_car.is_valid():
+		on_next_car.call()
 
 func _format_time(value: float) -> String:
 	var minutes := int(value / 60.0)
