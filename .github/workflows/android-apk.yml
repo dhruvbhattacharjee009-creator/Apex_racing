@@ -12,6 +12,10 @@ on:
       - ".github/workflows/android-apk.yml"
   workflow_dispatch:
 
+concurrency:
+  group: apex-android-${{ github.ref }}
+  cancel-in-progress: true
+
 permissions:
   contents: read
 
@@ -24,6 +28,51 @@ jobs:
     steps:
       - name: Check out source
         uses: actions/checkout@v4
+
+      - name: Install Godot Android export templates
+        run: |
+          set -eu
+          VERSION="4.4.1"
+          DEST="$HOME/.local/share/godot/export_templates/${VERSION}.stable"
+          mkdir -p "$DEST" /tmp/godot-templates
+          curl -fL "https://github.com/godotengine/godot/releases/download/${VERSION}-stable/Godot_v${VERSION}-stable_export_templates.tpz" -o /tmp/godot-templates.tpz
+          unzip -q /tmp/godot-templates.tpz -d /tmp/godot-templates
+          cp /tmp/godot-templates/templates/* "$DEST/"
+          test -s "$DEST/android_debug.apk"
+          test -s "$DEST/android_release.apk"
+
+      - name: Configure Java, Android SDK and debug signing
+        run: |
+          set -eu
+          JAVAC="$(command -v javac)"
+          JAVA_HOME_DIR="$(dirname "$(dirname "$(readlink -f "$JAVAC")")")"
+          SDK_ROOT="${ANDROID_SDK_ROOT:-${ANDROID_HOME:-}}"
+          if [ -z "$SDK_ROOT" ]; then
+            for candidate in /opt/android-sdk /opt/android-sdk-linux /usr/lib/android-sdk /usr/local/android-sdk /root/android-sdk; do
+              if [ -d "$candidate/platform-tools" ]; then SDK_ROOT="$candidate"; break; fi
+            done
+          fi
+          if [ -z "$SDK_ROOT" ]; then
+            SDKMANAGER="$(find /opt /usr/lib /usr/local -type f -name sdkmanager 2>/dev/null | head -n 1 || true)"
+            if [ -n "$SDKMANAGER" ]; then SDK_ROOT="$(dirname "$(dirname "$SDKMANAGER")")"; fi
+          fi
+          test -n "$SDK_ROOT"
+          test -d "$SDK_ROOT"
+          mkdir -p "$HOME/.android" "$HOME/.config/godot"
+          if [ ! -s "$HOME/.android/debug.keystore" ]; then
+            keytool -genkeypair -v -keystore "$HOME/.android/debug.keystore" -storepass android -alias androiddebugkey -keypass android -dname "CN=Android Debug,O=Android,C=US" -keyalg RSA -keysize 2048 -validity 10000
+          fi
+          cat > "$HOME/.config/godot/editor_settings-4.tres" <<EOF
+          [gd_resource type="EditorSettings" format=3]
+          [resource]
+          export/android/android_sdk_path = "$SDK_ROOT"
+          export/android/java_sdk_path = "$JAVA_HOME_DIR"
+          export/android/debug_keystore = "$HOME/.android/debug.keystore"
+          export/android/debug_keystore_user = "androiddebugkey"
+          export/android/debug_keystore_pass = "android"
+          EOF
+          echo "Java SDK: $JAVA_HOME_DIR"
+          echo "Android SDK: $SDK_ROOT"
 
       - name: Import project resources
         run: godot --headless --editor --path . --quit
