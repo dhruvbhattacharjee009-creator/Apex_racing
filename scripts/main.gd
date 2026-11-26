@@ -16,18 +16,16 @@ func _ready() -> void:
 	add_child(track)
 	track.build()
 	player = CarController.new()
-	add_child(player)
-	player.global_position = Vector3(65.0, 0.9, -6.0)
+	player.position = Vector3(65.0, 0.0, -6.0)
 	player.rotation.y = PI
+	add_child(player)
 	var camera := Camera3D.new()
 	camera.name = "ChaseCamera"
 	camera.current = true
 	camera.fov = 72.0
-	camera.position = Vector3(0.0, 5.0, 10.5)
-	player.add_child(camera)
-	var camera_script := FollowCamera.new()
-	camera.set_script(camera_script)
+	camera.set_script(FollowCamera)
 	camera.set("target", player)
+	player.add_child(camera)
 	hud = RacingHUD.new()
 	add_child(hud)
 	hud.set("player", player)
