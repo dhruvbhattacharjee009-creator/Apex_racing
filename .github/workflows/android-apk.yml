@@ -26,6 +26,12 @@ jobs:
     container:
       image: barichello/godot-ci:4.4.1
     steps:
+      - name: Install build utilities and Java
+        run: |
+          set -eu
+          apt-get update
+          DEBIAN_FRONTEND=noninteractive apt-get install -y curl unzip openjdk-17-jdk-headless
+
       - name: Check out source
         uses: actions/checkout@v4
 
@@ -54,7 +60,10 @@ jobs:
           fi
           if [ -z "$SDK_ROOT" ]; then
             SDKMANAGER="$(find /opt /usr/lib /usr/local -type f -name sdkmanager 2>/dev/null | head -n 1 || true)"
-            if [ -n "$SDKMANAGER" ]; then SDK_ROOT="$(dirname "$(dirname "$SDKMANAGER")")"; fi
+            case "$SDKMANAGER" in
+              */cmdline-tools/*) SDK_ROOT="${SDKMANAGER%%/cmdline-tools/*}" ;;
+              */tools/*) SDK_ROOT="${SDKMANAGER%%/tools/*}" ;;
+            esac
           fi
           test -n "$SDK_ROOT"
           test -d "$SDK_ROOT"
