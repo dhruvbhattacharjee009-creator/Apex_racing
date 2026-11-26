@@ -35,6 +35,33 @@ jobs:
       - name: Check out source
         uses: actions/checkout@v4
 
+      - name: Install Godot 4.4 Android SDK requirements
+        run: |
+          set -eu
+          SDK_ROOT="${ANDROID_SDK_ROOT:-${ANDROID_HOME:-/usr/lib/android-sdk}}"
+          SDKMANAGER="$(command -v sdkmanager || true)"
+          if [ -z "$SDKMANAGER" ]; then
+            SDKMANAGER="$(find "$SDK_ROOT/cmdline-tools" -type f -name sdkmanager 2>/dev/null | head -n 1 || true)"
+          fi
+          test -n "$SDKMANAGER"
+          test -x "$SDKMANAGER"
+          export ANDROID_HOME="$SDK_ROOT"
+          export ANDROID_SDK_ROOT="$SDK_ROOT"
+          yes | "$SDKMANAGER" --sdk_root="$SDK_ROOT" --licenses >/dev/null
+          "$SDKMANAGER" --sdk_root="$SDK_ROOT" \
+            "platform-tools" \
+            "build-tools;34.0.0" \
+            "platforms;android-34" \
+            "cmdline-tools;latest" \
+            "cmake;3.10.2.4988404" \
+            "ndk;23.2.8568313"
+          test -s "$SDK_ROOT/platforms/android-34/android.jar"
+          test -x "$SDK_ROOT/build-tools/34.0.0/aapt"
+          test -x "$SDK_ROOT/platform-tools/adb"
+          test -x "$SDK_ROOT/ndk/23.2.8568313/ndk-build"
+          test -x "$SDK_ROOT/cmake/3.10.2.4988404/bin/cmake"
+          echo "Verified Android SDK packages in $SDK_ROOT"
+
       - name: Install Godot Android export templates
         run: |
           set -eu
