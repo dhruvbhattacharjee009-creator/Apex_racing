@@ -7,13 +7,13 @@ An Android-first native 3D racing game prototype. The target is a fully offline-
 This repository contains a Godot 4 project scaffold with:
 
 - A procedural closed-loop 3D test circuit and collision barriers.
-- A basic player car controller with acceleration, braking, steering, grip and collision response.
+- A configurable garage roster with 10 original Formula-style cars and 3 GT3 cars, each with distinct liveries and handling values.\n- Separate procedural 3D Formula-style open-wheel and GT3 body designs, plus a touchscreen Next Car selector.\n- A basic player car controller with acceleration, braking, steering, grip and collision response.
 - A smooth chase camera.
 - On-screen touch controls plus keyboard controls for desktop testing.
 - A native Android export preset targeting arm64.
 - GitHub Actions automation to export and upload a debug APK.
 
-The first milestone is a playable foundation, not a finished simulator. The car uses a deliberately simplified controller; it is not yet a validated tyre/suspension simulation.
+The first milestone is a playable foundation, not a finished simulator. The roster uses original APEX names, liveries and procedural geometry inspired by broad motorsport design themes; it does not contain licensed team logos or exact team liveries. The car uses a deliberately simplified controller; it is not yet a validated tyre/suspension simulation.
 
 ## Open in Godot
 
